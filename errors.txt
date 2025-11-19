@@ -1,0 +1,11 @@
+Line 9 Line 9 Title Valid flights comment line, ignored for data parsing
+Line 10 missing departuredatetime field
+Line 11 invalid arrival datetime
+Line 12 arrival before departure
+Line 13 invalid origin code
+Line 14 invalid departure datetime
+Line 15 missing destination field
+Line 16 negative price value
+Line 17 flightid too long (more than 8 characters)
+Line 18 invalid departure datetime, invalid arrival datetime
+Line 19 Line 19 Title Invalid flights for testing validation comment line, ignored for data parsing

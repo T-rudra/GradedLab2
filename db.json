@@ -1,0 +1,58 @@
+[
+  {
+    "flightid": "BA2490",
+    "origin": "LHR",
+    "destination": "JFK",
+    "departuredatetime": "2025-11-14 1030",
+    "arrivaldatetime": "2025-11-14 1305",
+    "price": "489.99"
+  },
+  {
+    "flightid": "LH172",
+    "origin": "FRA",
+    "destination": "RIX",
+    "departuredatetime": "2025-11-12 0715",
+    "arrivaldatetime": "2025-11-12 1030",
+    "price": "159.50"
+  },
+  {
+    "flightid": "FR1234",
+    "origin": "RIX",
+    "destination": "OSL",
+    "departuredatetime": "2025-11-15 0800",
+    "arrivaldatetime": "2025-11-15 0855",
+    "price": "99.99"
+  },
+  {
+    "flightid": "BT102",
+    "origin": "RIX",
+    "destination": "HEL",
+    "departuredatetime": "2025-11-14 0940",
+    "arrivaldatetime": "2025-11-14 1025",
+    "price": "120.00"
+  },
+  {
+    "flightid": "AA9999",
+    "origin": "JFK",
+    "destination": "LHR",
+    "departuredatetime": "2025-11-15 2015",
+    "arrivaldatetime": "2025-11-16 0810",
+    "price": "550.00"
+  },
+  {
+    "flightid": "DY4501",
+    "origin": "OSL",
+    "destination": "ARN",
+    "departuredatetime": "2025-12-01 0600",
+    "arrivaldatetime": "2025-12-01 0710",
+    "price": "75.00"
+  },
+  {
+    "flightid": "AF112",
+    "origin": "CDG",
+    "destination": "DXB",
+    "departuredatetime": "2025-11-20 2110",
+    "arrivaldatetime": "2025-11-21 0545",
+    "price": "620.00"
+  }
+]
