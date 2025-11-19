@@ -1,11 +1,12 @@
-Line 9 Line 9 Title Valid flights comment line, ignored for data parsing
-Line 10 missing departuredatetime field
-Line 11 invalid arrival datetime
-Line 12 arrival before departure
-Line 13 invalid origin code
-Line 14 invalid departure datetime
-Line 15 missing destination field
-Line 16 negative price value
-Line 17 flightid too long (more than 8 characters)
-Line 18 invalid departure datetime, invalid arrival datetime
-Line 19 Line 19 Title Invalid flights for testing validation comment line, ignored for data parsing
+Line 9: Title Valid flights → missing required fields
+Line 10: BADLINE,NODATE,NOTIME → missing required fields
+Line 11: BABAD,RIX,LON,2025-11-15 1100,INVALIDDATE,250.00 → invalid arrival datetime
+Line 12: SK404,OSL,RIX,2025-11-15 1400,2025-11-15 1200,120.00 → arrival before departure
+Line 13: W61025,XXX,RIX,2025-11-16 1100,2025-11-16 1300,80.00 → invalid origin code
+Line 14: QR1,DOH,SYD,INVALIDDATETIME,2025-11-17 2330,980.00 → invalid departure datetime
+Line 15: KL1999,AMS,,2025-11-14 0900,2025-11-14 1115,180.00 → missing destination field
+Line 16: AY503,HEL,RIX,2025-11-15 1320,2025-11-15 1415,-10.00 → negative price value
+Line 17: LH999999999,FRA,LAX,2025-11-13 0930,2025-11-13 1810,700.00 → flightid too long (more than 8 characters)
+Line 18: SN2902,BRU,LHR,2025-13-40 1000,2025-13-40 1200,99.99 → invalid departure datetime, invalid arrival datetime
+Line 19: Title Invalid flights for testing validation → missing required fields
+Line 20: #Comment testing → comment line, ignored for data parsing

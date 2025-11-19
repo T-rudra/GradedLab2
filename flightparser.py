@@ -30,13 +30,16 @@ class FlightValidator:
     
     @staticmethod
     def validate_datetime(dt_str):
-        try:
-            if not dt_str:
-                return False, ""
-            datetime.strptime(dt_str, '%Y-%m-%d %H%M')
-            return True, ""
-        except ValueError:
-            return False, ""
+        if not dt_str:
+            return False, "missing datetime"
+        # Accept both 2025-11-14 1030 and 2025-11-14 10:30 formats
+        for fmt in ('%Y-%m-%d %H%M', '%Y-%m-%d %H:%M'):
+            try:
+                datetime.strptime(dt_str, fmt)
+                return True, ""
+            except ValueError:
+                continue
+        return False, "invalid datetime"
     
     @staticmethod
     def validate_price(price_str):
@@ -98,27 +101,51 @@ class FlightValidator:
 class FlightParser:
     def __init__(self):
         self.valid_flights = []
+        # store tuples: (line_num, raw_line, message)
         self.error_lines = []
     
     def parse_csv(self, filepath):
-        line_num = 0
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f, fieldnames=['flightid', 'origin', 'destination', 'departuredatetime', 'arrivaldatetime', 'price'])
-                for row in reader:
-                    line_num += 1
-                    if row['flightid'] == 'flightid' or not any(row.values()):
+                header_seen = False
+                for line_num, raw in enumerate(f, start=1):
+                    raw_line = raw.rstrip('\n')
+                    if not raw_line.strip():
                         continue
-                    
-                    if 'Valid flights' in str(row.get('flightid', '')) or 'Invalid flights' in str(row.get('flightid', '')):
-                        self.error_lines.append((line_num, f"Line {line_num} {row.get('flightid', '')} comment line, ignored for data parsing"))
+                    # comment lines start with '#'
+                    if raw_line.lstrip().startswith('#'):
+                        self.error_lines.append((line_num, raw_line, 'comment line, ignored for data parsing'))
                         continue
-                    
-                    valid, errors = FlightValidator.validate_flight_record(row, line_num)
+                    # header detection
+                    if not header_seen and raw_line.lower().startswith('flightid'):
+                        header_seen = True
+                        continue
+
+                    # parse CSV row from the raw line
+                    try:
+                        values = next(csv.reader([raw_line]))
+                    except Exception:
+                        self.error_lines.append((line_num, raw_line, 'malformed CSV line'))
+                        continue
+
+                    if len(values) < 6:
+                        self.error_lines.append((line_num, raw_line, 'missing required fields'))
+                        continue
+
+                    record = {
+                        'flightid': values[0].strip(),
+                        'origin': values[1].strip(),
+                        'destination': values[2].strip(),
+                        'departuredatetime': values[3].strip(),
+                        'arrivaldatetime': values[4].strip(),
+                        'price': values[5].strip()
+                    }
+
+                    valid, errors = FlightValidator.validate_flight_record(record, line_num)
                     if valid:
-                        self.valid_flights.append(row)
+                        self.valid_flights.append(record)
                     else:
-                        self.error_lines.append((line_num, errors))
+                        self.error_lines.append((line_num, raw_line, errors))
         except Exception as e:
             print(f"Error reading file {filepath}: {e}", file=sys.stderr)
     
@@ -133,8 +160,8 @@ class FlightParser:
     
     def export_errors(self, output_path):
         with open(output_path, 'w', encoding='utf-8') as f:
-            for line_num, error in self.error_lines:
-                f.write(f"Line {line_num} {error}\n")
+            for line_num, raw_line, message in self.error_lines:
+                f.write(f"Line {line_num}: {raw_line} → {message}\n")
     
     def load_json_database(self, filepath):
         try:
@@ -154,15 +181,65 @@ class FlightParser:
                 match = False
             if 'destination' in query and flight['destination'] != query['destination']:
                 match = False
-            if 'departuredatetime' in query and query['departuredatetime'] not in flight['departuredatetime']:
-                match = False
-            if 'arrivaldatetime' in query and query['arrivaldatetime'] not in flight['arrivaldatetime']:
-                match = False
+            # departure >= given value
+            if 'departuredatetime' in query:
+                qdt = query['departuredatetime']
+                try:
+                    q_dt = None
+                    for fmt in ('%Y-%m-%d %H%M', '%Y-%m-%d %H:%M'):
+                        try:
+                            q_dt = datetime.strptime(qdt, fmt)
+                            break
+                        except ValueError:
+                            continue
+                    if q_dt is None:
+                        match = False
+                    else:
+                        # parse flight dt
+                        f_dt = None
+                        for fmt in ('%Y-%m-%d %H%M', '%Y-%m-%d %H:%M'):
+                            try:
+                                f_dt = datetime.strptime(flight['departuredatetime'], fmt)
+                                break
+                            except ValueError:
+                                continue
+                        if f_dt is None or f_dt < q_dt:
+                            match = False
+                except Exception:
+                    match = False
+
+            # arrival <= given value
+            if 'arrivaldatetime' in query:
+                qdt = query['arrivaldatetime']
+                try:
+                    q_dt = None
+                    for fmt in ('%Y-%m-%d %H%M', '%Y-%m-%d %H:%M'):
+                        try:
+                            q_dt = datetime.strptime(qdt, fmt)
+                            break
+                        except ValueError:
+                            continue
+                    if q_dt is None:
+                        match = False
+                    else:
+                        f_dt = None
+                        for fmt in ('%Y-%m-%d %H%M', '%Y-%m-%d %H:%M'):
+                            try:
+                                f_dt = datetime.strptime(flight['arrivaldatetime'], fmt)
+                                break
+                            except ValueError:
+                                continue
+                        if f_dt is None or f_dt > q_dt:
+                            match = False
+                except Exception:
+                    match = False
+
+            # price <= given value
             if 'price' in query:
                 try:
                     query_price = float(query['price'])
                     flight_price = float(flight['price'])
-                    if flight_price != query_price:
+                    if flight_price > query_price:
                         match = False
                 except ValueError:
                     match = False
@@ -194,6 +271,9 @@ def main():
     parser.add_argument('-o', '--output', help='Output path for valid flights JSON', default='db.json')
     parser.add_argument('-j', '--json', help='Load existing JSON database')
     parser.add_argument('-q', '--query', help='Query file in JSON format')
+    parser.add_argument('--studentid', help='Student ID to include in response filename')
+    parser.add_argument('--firstname', help='First name to include in response filename')
+    parser.add_argument('--lastname', help='Last name to include in response filename')
     
     args = parser.parse_args()
     flight_parser = FlightParser()
@@ -214,7 +294,12 @@ def main():
     
     if args.query:
         results = flight_parser.execute_queries(args.query)
-        response_filename = 'response.json'
+        # fixed student information (Rudra Tushir, student ID 231ADB234)
+        sid = '231ADB234'
+        fname = 'Rudra'
+        lname = 'Tushir'
+        ts = datetime.now().strftime('%Y%m%d_%H%M')
+        response_filename = f'response_{sid}_{fname}_{lname}_{ts}.json'
         with open(response_filename, 'w', encoding='utf-8') as f:
             json.dump(results, f, indent=2)
         print(f"Query results saved to {response_filename}")

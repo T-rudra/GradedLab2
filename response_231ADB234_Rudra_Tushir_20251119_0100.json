@@ -1,0 +1,18 @@
+[
+  {
+    "query": {
+      "origin": "LHR",
+      "destination": "JFK"
+    },
+    "matches": [
+      {
+        "flightid": "BA2490",
+        "origin": "LHR",
+        "destination": "JFK",
+        "departuredatetime": "2025-11-14 1030",
+        "arrivaldatetime": "2025-11-14 1305",
+        "price": "489.99"
+      }
+    ]
+  }
+]
