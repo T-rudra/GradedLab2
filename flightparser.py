@@ -2,6 +2,8 @@
 """
 Flight Schedule Parser and Query Tool
 Python Final Assignment
+Author: Rudra Tushir
+Student ID: 231ADB234
 """
 
 import argparse
